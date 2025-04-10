@@ -3,6 +3,8 @@ from sqlmodel import Session, select, text
 from datetime import timedelta
 from app.models.reservation import Reservation, ReservationCreate
 from app.core.exceptions import TABLE_ALREADY_BOOKED_400
+from app.core.logger import logger
+from app.services.table_service import get_table_db
 
 
 def check_reservation_conflict(
@@ -29,7 +31,10 @@ def check_reservation_conflict(
             "new_end": new_end,
         },
     ).first()
-
+    if result:
+        logger.warning(
+            f"Reservation conflict: table_id: {reservation_in.table_id} {result.customer_name} - {result.reservation_time}"
+        )
     return result is not None
 
 
@@ -42,6 +47,9 @@ def create_reservation_db(reservation_in, session):
         raise TABLE_ALREADY_BOOKED_400
 
     reservation = Reservation.model_validate(reservation_in)
+
+    get_table_db(reservation.table_id, session)
+
     session.add(reservation)
     session.commit()
     session.refresh(reservation)

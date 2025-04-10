@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 from sqlmodel import Session
 
 from app.core.exceptions import TABLE_ALREADY_BOOKED_400
+from app.models import reservation
 from app.models.reservation import Reservation, ReservationCreate
 from app.models.table import TableCreate
 from app.services.table_service import create_table_db
@@ -26,6 +27,22 @@ def test_create_reservation(client: TestClient, session: Session) -> None:
     assert response.status_code == 201
     assert response.json()["table_id"] == created_table.id
     assert response.json()["customer_name"] == reservation_in.customer_name
+
+
+def test_create_reservation_wrong_table(
+    client: TestClient, session: Session, clean_db
+) -> None:
+    reservation_in = ReservationCreate(
+        customer_name="John Doe",
+        table_id=2,
+        reservation_time=datetime.now(),
+        duration_minutes=60,
+    )
+    json_compatible_reservation = jsonable_encoder(reservation_in)
+
+    response = client.post("/reservations/", json=json_compatible_reservation)
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Table not found"}
 
 
 def test_reservation_conflict(client: TestClient, session: Session) -> None:
@@ -121,3 +138,9 @@ def test_delete_reservation(client: TestClient, session: Session, clean_db):
     response = client.get("/reservations/")
     assert response.status_code == 200
     assert len(response.json()) == 0
+
+
+def test_delete_reservation_not_found(client: TestClient, session: Session, clean_db):
+    response = client.delete("/reservations/1")
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Reservation not found"}

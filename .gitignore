@@ -39,3 +39,4 @@ coverage.xml
 adrmeon.py
 
 .env.docker
+app.log

@@ -1,3 +1,4 @@
+import logging
 import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 import pytest
@@ -6,8 +7,11 @@ from sqlmodel import SQLModel, Session, create_engine
 from app.main import app
 from app.core.database import get_session
 from app.core.config import get_settings
+from app.core.logger import logger
+
 
 settings = get_settings()
+logger.setLevel(logging.CRITICAL)
 
 
 def create_test_database():

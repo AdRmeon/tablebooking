@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, status
+from typing import Annotated
+from fastapi import APIRouter, Body, Depends, status
 from sqlmodel import Session
 from app.models.reservation import ReservationCreate, ReservationRead
 from app.core.database import get_session
@@ -16,7 +17,20 @@ def get_reservations(session: Session = Depends(get_session)):
 
 @router.post("/", response_model=ReservationRead, status_code=status.HTTP_201_CREATED)
 def create_reservation(
-    reservation_in: ReservationCreate, session: Session = Depends(get_session)
+    reservation_in: Annotated[
+        ReservationCreate,
+        Body(
+            examples=[
+                {
+                    "customer_name": "John Doe",
+                    "reservation_time": "2025-04-09 12:00:00.000",
+                    "duration_minutes": 60,
+                    "table_id": 1,
+                }
+            ],
+        ),
+    ],
+    session: Session = Depends(get_session),
 ):
     return create_reservation_db(reservation_in, session)
 
