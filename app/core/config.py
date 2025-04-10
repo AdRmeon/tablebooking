@@ -14,6 +14,10 @@ class Settings(BaseSettings):
     def database_url(self) -> PostgresDsn:
         return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.POSTGRES_DB}"
 
+    @property
+    def database_test_url(self) -> PostgresDsn:
+        return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.POSTGRES_DB}_test"
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
 

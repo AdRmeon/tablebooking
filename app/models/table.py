@@ -11,7 +11,7 @@ class TableBase(SQLModel):
 class Table(TableBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
 
-    reservations: List["Reservation"] = Relationship(back_populates="table")  # type: ignore # noqa: F821
+    reservations: List["Reservation"] = Relationship(back_populates="table")  # type: ignore  # noqa: F821
 
 
 class TableCreate(TableBase):
