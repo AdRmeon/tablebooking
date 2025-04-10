@@ -27,6 +27,7 @@ COPY --from=builder --chown=python:python /python /python
 
 
 COPY --from=builder --chown=app:app /app /app
+RUN chmod +x /app/entrypoint.sh
 
 
 ENV PATH="/app/.venv/bin:$PATH"
