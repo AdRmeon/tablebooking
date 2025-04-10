@@ -37,3 +37,5 @@ coverage.xml
 .mypy_cache/
 
 adrmeon.py
+
+.env.docker
