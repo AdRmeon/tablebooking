@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 from sqlmodel import Session
+from app.core.exceptions import model_not_found_404
 from app.models.table import Table
 
 
@@ -35,3 +36,10 @@ def test_delete_table(client: TestClient, session: Session):
 
     response = client.delete(f"/tables/{table1.id}")
     assert response.status_code == 204
+
+
+def test_delete_table_not_found(client: TestClient, session: Session, clean_db):
+    table_id = 1
+    response = client.delete(f"/tables/{table_id}")
+    assert response.status_code == 404
+    assert response.json() == {"detail": model_not_found_404(Table, table_id).detail}

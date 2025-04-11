@@ -1,6 +1,7 @@
 from fastapi import HTTPException
 from httpx import get
 from sqlmodel import select
+from app.core.exceptions import model_not_found_404
 from app.models.table import Table
 from app.core.logger import logger
 
@@ -27,6 +28,5 @@ def delete_table_db(table_id, session):
 def get_table_db(table_id, session):
     table = session.get(Table, table_id)
     if not table:
-        logger.error("Table not found")
-        raise HTTPException(status_code=404, detail="Table not found")
+        raise model_not_found_404(Table, table_id)
     return table

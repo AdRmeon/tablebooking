@@ -3,10 +3,9 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.testclient import TestClient
 from sqlmodel import Session
 
-from app.core.exceptions import TABLE_ALREADY_BOOKED_400
-from app.models import reservation
+from app.core.exceptions import model_not_found_404, reservation_conflict_400
 from app.models.reservation import Reservation, ReservationCreate
-from app.models.table import TableCreate
+from app.models.table import Table, TableCreate
 from app.services.table_service import create_table_db
 
 
@@ -42,7 +41,7 @@ def test_create_reservation_wrong_table(
 
     response = client.post("/reservations/", json=json_compatible_reservation)
     assert response.status_code == 404
-    assert response.json() == {"detail": "Table not found"}
+    assert response.json()["detail"] == model_not_found_404(Table, 2).detail
 
 
 def test_reservation_conflict(client: TestClient, session: Session) -> None:
@@ -71,8 +70,14 @@ def test_reservation_conflict(client: TestClient, session: Session) -> None:
     )
 
     response = client.post("/reservations/", json=json_compatible_before_reservation)
-    assert response.status_code == TABLE_ALREADY_BOOKED_400.status_code
-    assert response.json()["detail"] == TABLE_ALREADY_BOOKED_400.detail
+    assert (
+        response.status_code
+        == reservation_conflict_400(reservation_before_reservation).status_code
+    )
+    assert (
+        response.json()["detail"]
+        == reservation_conflict_400(reservation_before_reservation).detail
+    )
 
     reservation_after_reservation = ReservationCreate(
         customer_name="Jane Doe",
@@ -83,8 +88,14 @@ def test_reservation_conflict(client: TestClient, session: Session) -> None:
     json_compatible_after_reservation = jsonable_encoder(reservation_after_reservation)
 
     response = client.post("/reservations/", json=json_compatible_after_reservation)
-    assert response.status_code == TABLE_ALREADY_BOOKED_400.status_code
-    assert response.json()["detail"] == TABLE_ALREADY_BOOKED_400.detail
+    assert (
+        response.status_code
+        == reservation_conflict_400(reservation_after_reservation).status_code
+    )
+    assert (
+        response.json()["detail"]
+        == reservation_conflict_400(reservation_after_reservation).detail
+    )
 
 
 def test_get_reservations(client: TestClient, session: Session, clean_db):
@@ -141,6 +152,9 @@ def test_delete_reservation(client: TestClient, session: Session, clean_db):
 
 
 def test_delete_reservation_not_found(client: TestClient, session: Session, clean_db):
-    response = client.delete("/reservations/1")
+    reservation_id = 1
+    response = client.delete(f"/reservations/{reservation_id}")
     assert response.status_code == 404
-    assert response.json() == {"detail": "Reservation not found"}
+    assert response.json() == {
+        "detail": model_not_found_404(Reservation, reservation_id).detail
+    }
